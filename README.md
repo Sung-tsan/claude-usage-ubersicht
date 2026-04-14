@@ -79,7 +79,10 @@ Replace `PASTE_YOUR_OAUTH_TOKEN_HERE` with your token:
 | **Move** | Click and drag anywhere on the widget |
 | **Collapse/Expand** | Click the **▾** button |
 | **Refresh** | Click the **↻** button |
+| **Close** | Click the **✕** button (hides the widget) |
+| **Reopen** | Run `claude-usage` in terminal, or `bash ~/.claude/claude-usage-open.sh` |
 | **Auto-refresh** | Happens every 5 minutes |
+| **Auto-start** | Ubersicht is added to login items on install — widget survives reboot |
 
 ## Security
 

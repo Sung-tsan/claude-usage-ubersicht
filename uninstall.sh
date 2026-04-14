@@ -9,14 +9,24 @@ yellow(){ printf "\033[33m%s\033[0m\n" "$*"; }
 WIDGET="$HOME/Library/Application Support/Übersicht/widgets/claude-usage.jsx"
 WIDGET_OFF="$HOME/Library/Application Support/Übersicht/widgets/claude-usage.jsx.off"
 FETCH="$HOME/.claude/claude-usage-fetch.sh"
+OPEN="$HOME/.claude/claude-usage-open.sh"
 CACHE="/tmp/.claude-usage-cache.json"
 
-rm -f "$WIDGET" "$WIDGET_OFF" "$FETCH" "$CACHE"
+rm -f "$WIDGET" "$WIDGET_OFF" "$FETCH" "$OPEN" "$CACHE"
 green "Removed widget files."
+
+# Remove shell alias
+for RC in "$HOME/.zshrc" "$HOME/.bashrc"; do
+  if [ -f "$RC" ] && grep -qF "claude-usage-open.sh" "$RC"; then
+    sed -i '' '/claude-usage-open\.sh/d' "$RC"
+    sed -i '' '/Claude Usage Widget/d' "$RC"
+    green "Removed alias from $RC"
+  fi
+done
+
+osascript -e 'tell application "Übersicht" to refresh' 2>/dev/null || true
 
 yellow "Config preserved: ~/.claude/claude-usage-widget.json"
 yellow "Delete it manually if you want to remove your token:"
 yellow "  rm ~/.claude/claude-usage-widget.json"
-
-osascript -e 'tell application "Übersicht" to refresh' 2>/dev/null || true
 green "Done."

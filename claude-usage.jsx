@@ -165,6 +165,11 @@ export const className = `
     color: #ccc;
   }
 
+  .close-btn:hover {
+    background: rgba(255,60,50,0.25);
+    color: #ff6b6b;
+  }
+
   .header-btn.spinning {
     animation: spin 0.8s linear infinite;
   }
@@ -362,6 +367,19 @@ function ToggleButton({ collapsed, onToggle }) {
   );
 }
 
+function CloseButton() {
+  const handleClick = (e) => {
+    e.stopPropagation();
+    // Rename .jsx → .jsx.off to disable widget, then refresh Übersicht
+    run('/bin/bash -c \'WD="$HOME/Library/Application Support/Übersicht/widgets"; mv "$WD/claude-usage.jsx" "$WD/claude-usage.jsx.off" 2>/dev/null; osascript -e "tell application \\"Übersicht\\" to refresh" 2>/dev/null\'');
+  };
+  return (
+    <button className="header-btn close-btn" onClick={handleClick} title="Close widget">
+      &#x2715;
+    </button>
+  );
+}
+
 // ── Widget component ──
 function Widget({ output, error }) {
   const [collapsed, setCollapsed] = useState(() => {
@@ -431,6 +449,7 @@ function Widget({ output, error }) {
         <div className="header-actions">
           {!collapsed && <RefreshButton />}
           <ToggleButton collapsed={collapsed} onToggle={toggleCollapsed} />
+          <CloseButton />
         </div>
       </div>
       <div className={"widget-body" + (collapsed ? " collapsed" : "")}>
