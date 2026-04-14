@@ -10,11 +10,8 @@ import { React, run } from "uebersicht";
 const { useRef, useState, useEffect } = React;
 
 // ── Config ──
-// After install, update this path if your home directory differs.
-const FETCH_SCRIPT = `${process.env.HOME}/.claude/claude-usage-fetch.sh`;
-
 export const refreshFrequency = 5 * 60 * 1000; // 5 minutes
-export const command = `/bin/bash "${FETCH_SCRIPT}"`;
+export const command = '/bin/bash "$HOME/.claude/claude-usage-fetch.sh"';
 
 // ── Styles ──
 export const className = `
@@ -339,7 +336,7 @@ function RefreshButton() {
   const handleClick = (e) => {
     e.stopPropagation();
     setSpinning(true);
-    run(`/bin/bash "${FETCH_SCRIPT}"`);
+    run('/bin/bash "$HOME/.claude/claude-usage-fetch.sh"');
     setTimeout(() => setSpinning(false), 1000);
   };
   return (
