@@ -40,10 +40,21 @@
 4. **File-based cache** — Simple `/tmp/` cache survives widget refreshes; cleared on reboot (acceptable)
 5. **localStorage for UI state** — Drag position + collapse state persist across refreshes without external storage
 
+## 2026-04-15 — Auto Token Refresh
+
+### Completed
+
+- [x] **Auto token refresh** — When API returns 401 (expired token) or cache is stale (>60min), fetch script automatically extracts a fresh OAuth token from macOS Keychain (`Claude Code-credentials`), updates config, and retries — no manual intervention needed
+
+### Issues Encountered & Resolved
+
+| Issue | Root Cause | Fix |
+|-------|-----------|-----|
+| Widget showing 26-hour stale cache | OAuth token in config had expired, API returning 401 | Added auto-refresh logic: on 401 or stale cache, extract fresh token from Keychain via `security find-generic-password` |
+
 ### Next Steps
 
 - [ ] Add screenshot to repo for README
 - [ ] Test install script on a clean macOS machine
-- [ ] Implement auto token refresh using `refreshToken`
 - [ ] Consider desktop notifications when usage > 80%
 - [ ] Make repo public when ready
