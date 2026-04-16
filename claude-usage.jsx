@@ -340,9 +340,10 @@ function RefreshButton() {
   const [spinning, setSpinning] = useState(false);
   const handleClick = (e) => {
     e.stopPropagation();
+    if (spinning) return;
     setSpinning(true);
-    run('/bin/bash "$HOME/.claude/claude-usage-fetch.sh"');
-    setTimeout(() => setSpinning(false), 1000);
+    run('/bin/bash "$HOME/.claude/claude-usage-fetch.sh"')
+      .finally(() => setSpinning(false));
   };
   return (
     <button
