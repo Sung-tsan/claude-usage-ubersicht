@@ -337,14 +337,36 @@ function DraggableWidget({ children }) {
 const COLLAPSED_KEY = "claude-usage-widget-collapsed";
 
 function RefreshButton() {
-  const [spinning, setSpinning] = useState(false);
+  const SPIN_KEY = "claude-usage-widget-refreshing";
+  const SPIN_TTL_MS = 10000;
+
+  const [spinning, setSpinning] = useState(() => {
+    const ts = parseInt(localStorage.getItem(SPIN_KEY) || "0", 10);
+    return ts > 0 && (Date.now() - ts) < SPIN_TTL_MS;
+  });
+
+  // On remount after Übersicht refresh: data is fresh, clear spinner
+  useEffect(() => {
+    const ts = parseInt(localStorage.getItem(SPIN_KEY) || "0", 10);
+    if (ts > 0) {
+      localStorage.removeItem(SPIN_KEY);
+      setSpinning(false);
+    }
+  }, []);
+
   const handleClick = (e) => {
     e.stopPropagation();
     if (spinning) return;
+    localStorage.setItem(SPIN_KEY, String(Date.now()));
     setSpinning(true);
-    run('/bin/bash "$HOME/.claude/claude-usage-fetch.sh"')
-      .finally(() => setSpinning(false));
+    // Global refresh: Übersicht re-runs command → fetch script hits API → new stdout → render
+    run('osascript -e \'tell application "Übersicht" to refresh\'')
+      .catch(() => {
+        localStorage.removeItem(SPIN_KEY);
+        setSpinning(false);
+      });
   };
+
   return (
     <button
       className={"header-btn" + (spinning ? " spinning" : "")}
@@ -383,6 +405,16 @@ function CloseButton() {
 
 // ── Widget component ──
 function Widget({ output, error }) {
+  // 1-min ticker: force re-render so countdown & freshness label stay current
+  const [, forceTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => forceTick(t => t + 1), 60000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Track mount time so freshness label ticks between Übersicht refreshes
+  const mountedAtRef = useRef(Date.now());
+
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem(COLLAPSED_KEY) === "1"; } catch { return false; }
   });
@@ -421,11 +453,10 @@ function Widget({ output, error }) {
         </div>
       );
     } else {
-      const ageSec = data._cache_age_sec || 0;
-      const ageMin = Math.floor(ageSec / 60);
-      const cacheLabel = data._cached
-        ? (ageMin < 1 ? "cached < 1m ago" : `cached ${ageMin}m ago`)
-        : null;
+      const elapsedSec = Math.floor((Date.now() - mountedAtRef.current) / 1000);
+      const totalAgeSec = (data._cache_age_sec || 0) + elapsedSec;
+      const totalAgeMin = Math.floor(totalAgeSec / 60);
+      const freshnessLabel = totalAgeMin < 1 ? "updated < 1m ago" : `updated ${totalAgeMin}m ago`;
       content = (
         <>
           <UsageSection label="5-Hour Session" data={data.five_hour} />
@@ -436,7 +467,7 @@ function Widget({ output, error }) {
           {data.seven_day_opus && (
             <UsageSection label="Opus (Weekly)" data={data.seven_day_opus} />
           )}
-          {cacheLabel && <div className="cache-banner">{cacheLabel}</div>}
+          <div className="cache-banner">{freshnessLabel}</div>
         </>
       );
     }
